@@ -1,0 +1,33 @@
+
+This is NuAcorn, the Nu plug-in for the Acorn image-editing tool.
+
+  For more on Acorn, see: http://flyingmeat.com/acorn
+  For more on Nu, see: http://programming.nu 
+
+Released under the Apache License, v 2.0.
+
+Tim Burks
+Neon Design Technology, Inc.
+http://www.neontology.com
+
+
+HOW TO USE THIS
+---------------
+
+If you have Nu and Acorn installed, just type "nuke install" in the NuAcorn top-level directory.
+
+That will install the NuAcorn plugin, which adds three demonstration commands.
+
+	1. Filter->Nu->Grayscale
+	2. Filter->Color->Make Grayscale (Nu)
+	3. Filter->Add Gray Border
+
+See the acorn.nu source file for details.
+	
+Also, if you're experienced with Nu, the familiar Nu console is installed under the Acorn Window menu.
+
+If you want to have some fun with it, open it and type the following, replacing "/Users/tim/Desktop" with the path to your local NuAcorn directory:
+	(load "/Users/tim/Desktop/NuAcorn/examples/add_red_border.nu")
+
+But if that's too much work for you, there's an even easier way to add plugins at runtime; check out the "Nu->Load Plugin from File..." menu item.
+

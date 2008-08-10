@@ -1,0 +1,5 @@
+
+Move NuAcornPlugin.xcodeproj up one level if you want to use Xcode to build this plugin.
+
+But before you do, I have two words for you: "nuke install" 
+
