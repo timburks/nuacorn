@@ -68,20 +68,22 @@
         self)
      
      (- (void) willRegister:(id) pluginManager is
-        (pluginManager addFilterMenuTitle:@filterMenuTitle
-             withSuperMenuTitle:@superMenuTitle
-             target:self
-             action:"processImage:withUserObject:"
-             keyEquivalent:""
-             keyEquivalentModifierMask:0
-             userObject:nil))
+        (set $pluginManager pluginManager)
+        (if @filterMenuTitle
+            (pluginManager addFilterMenuTitle:@filterMenuTitle
+                 withSuperMenuTitle:@superMenuTitle
+                 target:self
+                 action:"processImage:withUserObject:"
+                 keyEquivalent:""
+                 keyEquivalentModifierMask:0
+                 userObject:nil)))
      
      (- (id) processImage:(id) image withUserObject:(id) userObject is
         (eval (cons 'progn @body)))
      
      (- (id) worksOnShapeLayers:(id) userObject is NO))
 
-(macro plugin
+(macro acorn-filter
      (set __filterMenuTitle (margs car))
      (NSLog "menu title #{__filterMenuTitle}")
      
@@ -103,26 +105,28 @@
      (__plugin willRegister:pluginManager)
      (__plugin didRegister))
 
-(plugin "Make Grayscale (Nu)" under "Color"
-        (set filter (CIFilter filterWithName:"CIColorMonochrome"))
-        (filter setValue:image forKey:"inputImage")
-        (set color (CIColor colorWithRed:0.5 green:0.5 blue:0.5))
-        (filter setDefaults)
-        (filter setValue:color forKey:"inputColor")
-        (filter setValue:1 forKey:"inputIntensity")
-        (filter valueForKey:"outputImage"))
+(acorn-filter "Make Grayscale (Nu)" under "Color"
+     (set filter (CIFilter filterWithName:"CIColorMonochrome"))
+     (filter setValue:image forKey:"inputImage")
+     (set color (CIColor colorWithRed:0.5 green:0.5 blue:0.5))
+     (filter setDefaults)
+     (filter setValue:color forKey:"inputColor")
+     (filter setValue:1 forKey:"inputIntensity")
+     (filter valueForKey:"outputImage"))
 
-(plugin "Add Grey Border"
-        (set nsimage (image NSImage))
-        (nsimage lockFocus)
-        ((NSColor grayColor) set)
-        (set path (NSBezierPath bezierPathWithRect:(list 0.5 0.5 (- ((nsimage size) 0) 1) (- ((nsimage size) 1) 1))))
-        (path setLineWidth:10)
-        (path stroke)
-        (nsimage unlockFocus)
-        (CIImage imageWithData:(nsimage TIFFRepresentation)))
+(acorn-filter "Add Grey Border" under "Nu"
+     (set nsimage (image NSImage))
+     (nsimage lockFocus)
+     ((NSColor grayColor) set)
+     (set path (NSBezierPath bezierPathWithRect:(list 0.5 0.5 (- ((nsimage size) 0) 1) (- ((nsimage size) 1) 1))))
+     (path setLineWidth:10)
+     (path stroke)
+     (nsimage unlockFocus)
+     (CIImage imageWithData:(nsimage TIFFRepresentation)))
 
 ;; -------- example 2 / end ----------
+
+(set $last-file-loaded nil)
 
 ;; you can use this function to load a plugin from the command line
 (function open-file ()
@@ -132,17 +136,30 @@
      (if (== (openDialog runModalForDirectory:nil file:nil types:(array "nu")) NSOKButton)
          ((openDialog filenames) each:
           (do (filename)
-              (load filename)))))
+              (load filename)
+              (set $last-file-loaded filename)))))
 
 ;; but since mac users like to have GUIs for everything, here's a "load plugin" dialog
 
 (class NuLoader is NSObject
-     (- (void) openFile:(id) sender is (open-file)))
+     (- (void) openFile:(id) sender is (open-file))
+     (- (void) reloadLastFile:(id) sender is
+        (if $last-file-loaded
+            (then (load $last-file-loaded))
+            (else (open-file)))))
+
+(set $nuloader ((NuLoader alloc) init))
 
 (load "menu")
 
 (((NSApplication sharedApplication) mainMenu) addItem:
- (build-menu '(menu "Nu" ("Load Plugin from File..." action:"openFile:" target:(set $nuloader ((NuLoader alloc) init)))) "Nu"))
+ (build-menu
+            '(menu "Nu"
+                   ("Console" action:"toggleConsole:" target:$console)
+                   (separator)
+                   ("Load Plugin from File..." action:"openFile:" target:$nuloader)
+                   ("Reload Last File" action:"reloadLastFile:" target:$nuloader key:"r"))
+            "Nu"))
 
 
 
